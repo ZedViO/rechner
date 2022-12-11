@@ -29,14 +29,16 @@ int main() {
     cout << "Hallo! Dieser Rechner kann: +, -, *, /, sinx, cosx, tanx, cotx, exp, x" << endl;
     cout << "Z.B, tippen Sie \"4+5*3-(23-6)\" und dann sehen Sie die Magie" << endl;
     string expr;
-    cin >> expr;
+    getline(cin, expr);
     //An diesem Moment haben wir eine Linie von Text
 
     vector<string> arrExpr;
     string wort;
     for (auto el: expr) {
-        if (el != '+' && el != '(' && el != '-' && el != '*' && el != '/' && el != ')') {
+        if (el != '+' && el != '(' && el != '-' && el != '*' && el != '/' && el != ')' && el != ' ') {
             wort += el;
+        } else if (el == ' ') {
+            continue;
         } else {
             if (!wort.empty()) {
                 arrExpr.push_back(wort);
@@ -53,6 +55,31 @@ int main() {
         wort = "";
     }
     //Dies lasst uns eine Sammlung der Elemente zu haben. Zum B. "34-(5*(5-334)-4)" -> {34, -, (, 5, ... , 4, )};
+
+    size_t lbracket = 0, rbracket = 0;
+    for (auto &elem: arrExpr) {
+        if (elem.find(",") != string::npos) { //Заменяет запятые на точки
+            string left, right;
+            for (size_t it = 0; it < elem.size(); ++it) {
+                if (it < elem.find(",")) {
+                    left += elem[it];
+                } else if (it > elem.find(",")) {
+                    right += elem[it];
+                }
+            }
+            elem = left + "." + right;
+        }
+
+        if (elem == "(") { //Считает скобки
+            ++lbracket;
+        } else if (elem == ")") {
+            ++rbracket;
+        }
+    }
+    if (lbracket != rbracket) {
+        cout << "Achtung! Die Anzahl der linken Klammern entspricht nicht der Anzahl der rechten Klammern" << endl;
+        return -1;
+    }
 
     vector<string> out;
     vector<string> stack;
@@ -78,72 +105,81 @@ int main() {
             }
         }
     }
-
     while (!stack.empty()) {
         out.push_back(stack[stack.size() - 1]);
         stack.pop_back();
     }
     //Derzeit haben wir eine polnische Linie
 
-    for (auto &el: out) {
-        if (el.find("sin") != string::npos) {
-            string arg;
-            for (size_t it = 3; it < el.size(); ++it) {
-                arg += el[it];
+    try {
+        for (auto &el: out) {
+            if (el.find("sin") != string::npos) {
+                string arg;
+                for (size_t it = 3; it < el.size(); ++it) {
+                    arg += el[it];
+                }
+                el = to_string(sin(stod(arg)));
+            } else if (el.find("cos") != string::npos) {
+                string arg;
+                for (size_t it = 3; it < el.size(); ++it) {
+                    arg += el[it];
+                }
+                el = to_string(cos(stod(arg)));
+            } else if (el.find("tan") != string::npos) {
+                string arg;
+                for (size_t it = 3; it < el.size(); ++it) {
+                    arg += el[it];
+                }
+                el = to_string(tan(stod(arg)));
+            } else if (el.find("cot") != string::npos) {
+                string arg;
+                for (size_t it = 3; it < el.size(); ++it) {
+                    arg += el[it];
+                }
+                el = to_string(1 / tan(stod(arg)));
+            } else if (el.find("exp") != string::npos) {
+                string arg;
+                for (size_t it = 3; it < el.size(); ++it) {
+                    arg += el[it];
+                }
+                el = to_string(exp(stod(arg)));
+            } else if (el == "x" || el == "X") {
+                string x;
+                cout << "Geben Sie Wert des X" << endl;
+                cin >> x;
+                el = x;
             }
-            el = to_string(sin(stod(arg)));
-        } else if (el.find("cos") != string::npos) {
-            string arg;
-            for (size_t it = 3; it < el.size(); ++it) {
-                arg += el[it];
-            }
-            el = to_string(cos(stod(arg)));
-        } else if (el.find("tan") != string::npos) {
-            string arg;
-            for (size_t it = 3; it < el.size(); ++it) {
-                arg += el[it];
-            }
-            el = to_string(tan(stod(arg)));
-        } else if (el.find("cot") != string::npos) {
-            string arg;
-            for (size_t it = 3; it < el.size(); ++it) {
-                arg += el[it];
-            }
-            el = to_string(1/tan(stod(arg)));
-        } else if (el.find("exp") != string::npos) {
-            string arg;
-            for (size_t it = 3; it < el.size(); ++it) {
-                arg += el[it];
-            }
-            el = to_string(exp(stod(arg)));
         }
-    }
-    //Berechnen die Trigonomische Funktionen
+        //Berechnen die Trigonomische Funktionen und finden X
 
-    while (find_if(out.begin(), out.end(), pred) != out.end()) {
-        auto pos = find_if(out.begin(), out.end(), pred);
-        if (*pos == "+") {
-            *(pos - 2) = to_string(stold(*(pos - 2)) + stold(*(pos - 1)));
-            out.erase(pos - 1);
-            out.erase(pos - 1);
-        } else if (*pos == "-") {
-            *(pos - 2) = to_string(stold(*(pos - 2)) - stold(*(pos - 1)));
-            out.erase(pos - 1);
-            out.erase(pos - 1);
-        } else if (*pos == "*") {
-            *(pos - 2) = to_string(stold(*(pos - 2)) * stold(*(pos - 1)));
-            out.erase(pos - 1);
-            out.erase(pos - 1);
-        } else if (*pos == "/") {
-            *(pos - 2) = to_string(stold(*(pos - 2)) / stold(*(pos - 1)));
-            out.erase(pos - 1);
-            out.erase(pos - 1);
+        while (find_if(out.begin(), out.end(), pred) != out.end()) {
+            auto pos = find_if(out.begin(), out.end(), pred);
+            if (*pos == "+") {
+                *(pos - 2) = to_string(stold(*(pos - 2)) + stold(*(pos - 1)));
+                out.erase(pos - 1);
+                out.erase(pos - 1);
+            } else if (*pos == "-") {
+                *(pos - 2) = to_string(stold(*(pos - 2)) - stold(*(pos - 1)));
+                out.erase(pos - 1);
+                out.erase(pos - 1);
+            } else if (*pos == "*") {
+                *(pos - 2) = to_string(stold(*(pos - 2)) * stold(*(pos - 1)));
+                out.erase(pos - 1);
+                out.erase(pos - 1);
+            } else if (*pos == "/") {
+                *(pos - 2) = to_string(stold(*(pos - 2)) / stold(*(pos - 1)));
+                out.erase(pos - 1);
+                out.erase(pos - 1);
+            }
         }
+        long double res = stold(out[0]);
+        //Hier berechnen wir die Aufgabe
+
+        cout << ("%g\n", res);
+        //Sehr gut!
     }
-    long double res = stold(out[0]);
-    //Hier berechnen wir die Aufgabe
-
-    cout << ("%g\n", res);
-    //Sehr gut!
-
+    catch (const std::invalid_argument &ew) { //Wenn wir ein falsches Argument erhalten...
+        cout << "Achtung! Falsche Argumente!";
+        return -1;
+    }
 }
