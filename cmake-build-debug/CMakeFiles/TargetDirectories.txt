@@ -1,0 +1,3 @@
+C:/Users/rybal/Desktop/mein beliebtes Uni/rechner/cmake-build-debug/CMakeFiles/rechner.dir
+C:/Users/rybal/Desktop/mein beliebtes Uni/rechner/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/rybal/Desktop/mein beliebtes Uni/rechner/cmake-build-debug/CMakeFiles/rebuild_cache.dir
